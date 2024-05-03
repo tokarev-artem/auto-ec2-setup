@@ -1,0 +1,36 @@
+- name: install deps
+  apt:
+    name: 
+    - git
+    - htop
+    - ncdu
+    - dstat
+    - software-properties-common
+    state: latest
+    update_cache: true
+    
+- name: Install certbot
+  snap:
+    name: certbot
+    classic: true
+
+- name: Set file permissions recursively
+  file:
+    path: /var/www/vhosts/
+    owner: www-data
+    group: www-data
+    mode: "u=rwX,g=rwX,o=rX"
+    recurse: yes
+    state: directory
+
+- name: Add ubuntu user to www-data group
+  user:
+    name: ubuntu
+    groups: www-data
+    append: yes
+
+- name: Add www-data user to ubuntu group
+  user:
+    name: www-data
+    groups: ubuntu
+    append: yes

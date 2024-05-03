@@ -1,0 +1,53 @@
+- name: Add ondrej/php PPA repository
+  apt_repository:
+    repo: 'ppa:ondrej/php'
+    state: present
+
+- name: PHP | Installing modules
+  apt:
+    name: 
+    - php{{ php_version }}-gd
+    - php{{ php_version }}-xml
+    - php{{ php_version }}-odbc
+    - php{{ php_version }}-dba
+    - php{{ php_version }}-common
+    - php{{ php_version }}
+    - php{{ php_version }}-soap
+    - php{{ php_version }}-cli
+    - php{{ php_version }}-mysql
+    - php{{ php_version }}-mbstring
+    - php{{ php_version }}-xmlrpc
+    - php{{ php_version }}-fpm
+    - php{{ php_version }}-opcache
+    - php{{ php_version }}-bcmath
+    - php{{ php_version }}-curl
+    - php{{ php_version }}-zip
+    - composer
+    state: latest
+
+- name: php.ini changes
+  ini_file:
+     dest=/etc/php/{{ php_version }}/fpm/php.ini 
+     option={{ item.option }} section="PHP" value="{{ item.value }}"
+  with_items:
+    - {option: 'file_uploads', value: 'On'}
+    - {option: 'display_errors', value: 'Off'}
+    - {option: 'display_startup_errors', value: 'Off'}
+    - {option: 'log_errors', value: 'On'}
+    - {option: 'error_log', value: '/var/log/php{{ php_version }}-fpm.log'}
+    - {option: 'file_uploads', value: 'On'}
+    - {option: 'allow_url_fopen', value: 'On'}
+    - {option: 'allow_url_include', value: 'Off'}
+    - {option: 'disable_functions', value: 'passthru,system,curl_multi_exec,parse_ini_file,show_source,shell_exec,exec,system'}
+    - {option: 'expose_php', value: 'Off'}
+    - {option: 'ignore_repeated_errors', value: 'Off'}
+    - {option: 'cgi.force_redirect', value: 'Off'}
+    - {option: 'short_open_tag', value: 'On' }
+    - {option: 'post_max_size', value: '100M' }
+    - {option: 'upload_max_filesize', value: '100M'}
+
+- name: PHP | Staring PHP-FPM
+  service:
+    name: php{{ php_version }}-fpm.service
+    state: restarted
+    enabled: yes

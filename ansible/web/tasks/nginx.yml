@@ -1,0 +1,25 @@
+---
+- name: NGINX | Installing NGINX
+  apt: 
+    state: latest 
+    name: nginx
+
+- name: Create directory
+  file: 
+    path: "/var/www/vhosts/{{ domain_name }}"
+    state: directory 
+    mode: u=rwX,g=rwX,o=rX
+    force: yes
+    owner: www-data
+    group: www-data
+
+- name: Add VirtualHost nginx conf
+  template: 
+    src: nginx.conf 
+    dest: /etc/nginx/conf.d/{{ domain_name }}.conf
+
+- name: NGINX | Starting NGINX
+  service:
+    name: nginx
+    state: restarted
+    enabled: yes

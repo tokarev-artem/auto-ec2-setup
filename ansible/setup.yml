@@ -1,0 +1,4 @@
+- name: Configure WEB server
+  hosts: localhost
+  roles:
+    - web
