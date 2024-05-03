@@ -48,10 +48,6 @@ After the server created - it will run self-setup ansible script used EC2 [user 
 - An Nginx configuration file will be created at /etc/nginx/conf.d/example.com.conf, and the virtual host will be served from /var/www/vhosts/example.com/.
 - After the autosetup is finished, you can point the DNS of your example.com and www.example.com to the IP address and issue HTTPS certificates by running certbot --nginx.
 
-
-## Debug: 
-If something was not configured properly - you can review ansible log in /var/log/cloud-init-output.log.
-
 ## Debug: 
 If something was not configured properly - you can review ansible log in /var/log/cloud-init-output.log.
 
