@@ -6,6 +6,7 @@
     - ncdu
     - dstat
     - software-properties-common
+    - net-tools
     state: latest
     update_cache: true
     
@@ -22,15 +23,3 @@
     mode: "u=rwX,g=rwX,o=rX"
     recurse: yes
     state: directory
-
-- name: Add ubuntu user to www-data group
-  user:
-    name: ubuntu
-    groups: www-data
-    append: yes
-
-- name: Add www-data user to ubuntu group
-  user:
-    name: www-data
-    groups: ubuntu
-    append: yes
