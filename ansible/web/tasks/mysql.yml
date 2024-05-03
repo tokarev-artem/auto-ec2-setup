@@ -1,5 +1,5 @@
 ---
-- name: Installing Mysql  and dependencies
+- name: Installing MySQL and dependencies
   package:
     name: "{{ item }}"
     state: present
@@ -10,7 +10,7 @@
     - python3-mysqldb
     - libmysqlclient-dev
 
-- name: start and enable mysql service
+- name: Start and enable MySQL service
   service:
     name: mysql
     state: started
@@ -29,19 +29,21 @@
   template: 
     src: my.cnf 
     dest: /root/.my.cnf
+    owner: root
+    group: root
+    mode: '0600'
 
 - name: Create a new database with name "{{ domain_name }}"
   mysql_db:
     name: '`{{ domain_name }}`'
     state: present
 
-- name: Create user with password, all database privileges and 'WITH GRANT OPTION' in db1 and db2
+- name: Create user with password, all database privileges, and 'WITH GRANT OPTION' in the "{{ domain_name }}" database
   mysql_user:
     name: "{{ domain_name }}"
     password: "{{ db_pass }}"
     state: present
-    priv: 
-      '{{ domain_name }}.*:ALL,GRANT'
+    priv: "{{ domain_name }}.*:ALL,GRANT"
 
 - name: Create db.php file
   template: 
