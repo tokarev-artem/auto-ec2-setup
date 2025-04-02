@@ -3,7 +3,7 @@ output "security_group_id" {
   description = "EC2 instance security group ID"
 }
 output "ec2_instance_ip" {
-  value       = aws_eip.this.public_ip
+  value       = module.ec2_instance.public_ip
   description = "EC2 public IP"
 }
 output "ec2_instance_id" {

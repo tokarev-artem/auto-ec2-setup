@@ -7,6 +7,7 @@
     - dstat
     - software-properties-common
     - net-tools
+    - zip
     state: latest
     update_cache: true
     
@@ -23,3 +24,25 @@
     mode: "u=rwX,g=rwX,o=rX"
     recurse: yes
     state: directory
+
+- name: Download AWS CLI v2
+  get_url:
+    url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+    dest: "/tmp/awscliv2.zip"
+
+- name: Unzip AWS CLI v2
+  unarchive:
+    src: "/tmp/awscliv2.zip"
+    dest: "/tmp/"
+    remote_src: yes
+
+- name: Install AWS CLI v2
+  command: "/tmp/aws/install"
+
+- name: Verify AWS CLI installation
+  command: "aws --version"
+  register: aws_cli_version
+
+- name: Show AWS CLI version
+  debug:
+    msg: "{{ aws_cli_version.stdout }}"

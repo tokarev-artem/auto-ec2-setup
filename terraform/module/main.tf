@@ -25,7 +25,7 @@ module "security_group" {
 
 module "ec2_instance" {
   source  = "terraform-aws-modules/ec2-instance/aws"
-  version = "~> 5.6"
+  version = "~> 5.8"
 
   name                        = var.domain_name
   ami                         = data.aws_ami.ubuntu.image_id
@@ -34,18 +34,13 @@ module "ec2_instance" {
   associate_public_ip_address = true
   vpc_security_group_ids      = [module.security_group.security_group_id]
   subnet_id                   = var.subnet_id
-  user_data                   = data.template_file.init.rendered
+  user_data                   = local.init_script
   create_iam_instance_profile = var.create_iam_instance_profile
   root_block_device           = var.root_block_device
+  create_eip                  = true
   iam_role_description        = "IAM role for EC2 instance"
   iam_role_policies = {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   }
   tags = local.tags
-}
-
-resource "aws_eip" "this" {
-  instance = module.ec2_instance.id
-  domain   = "vpc"
-  tags     = local.tags
 }
