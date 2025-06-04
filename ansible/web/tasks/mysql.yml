@@ -49,8 +49,8 @@
   template: 
     src: db.php
     dest: /var/www/vhosts/{{ domain_name }}/index.php
-    owner: ubuntu
-    group: ubuntu
+    owner: www-data
+    group: www-data
     mode: '0644'
 
 - name: Create a directory for backup script
