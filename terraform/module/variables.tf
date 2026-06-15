@@ -81,6 +81,31 @@ variable "wordpress_hardening" {
   default     = false
 }
 
+variable "install_mysql" {
+  type        = bool
+  description = "Whether to install MySQL and create databases/users"
+  default     = true
+}
+
+variable "mysql_databases" {
+  type = list(object({
+    name     = string
+    user     = string
+    password = optional(string, "")
+  }))
+  description = <<-EOT
+    List of MySQL databases and users to create. Each entry creates one database
+    and one user with full privileges on that database.
+    If password is omitted or empty, a random 20-character password is generated.
+    Example:
+      mysql_databases = [
+        { name = "appdb",   user = "appuser" },
+        { name = "testdb",  user = "testuser", password = "s3cr3t" }
+      ]
+  EOT
+  default = []
+}
+
 variable "ubuntu_version" {
   type        = string
   description = "Ubuntu version"

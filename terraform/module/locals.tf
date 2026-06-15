@@ -20,7 +20,9 @@ locals {
     wordpress_hardening = var.wordpress_hardening
     # Always provided so templatefile() can parse the %{ if } block regardless of framework;
     # the conditional in the template controls whether they are emitted in the output.
-    upstream_port  = var.upstream_port
-    nodejs_version = var.nodejs_version
+    upstream_port   = var.upstream_port
+    nodejs_version  = var.nodejs_version
+    install_mysql   = var.install_mysql
+    mysql_databases = jsonencode(var.mysql_databases)
   })
 }

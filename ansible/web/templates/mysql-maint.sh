@@ -42,8 +42,8 @@
 # your server configuration     #
 #################################
 DB_HOST=127.0.0.1
-DB_USER=root
-DB_PASS='{{ root_pass }}'
+DB_USER=backup
+DB_PASS='{{ backup_pass }}'
 DB_PORT=3306
 DB_SOCKET=
 

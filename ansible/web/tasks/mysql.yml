@@ -1,4 +1,9 @@
 ---
+# mysql_databases is passed as a JSON string from --extra-vars; parse it once into a fact.
+- name: Parse mysql_databases JSON
+  set_fact:
+    _mysql_databases: "{{ mysql_databases | from_json if mysql_databases is string else mysql_databases }}"
+
 - name: Installing MySQL and dependencies
   package:
     name: "{{ item }}"
@@ -16,17 +21,17 @@
     state: started
     enabled: yes
 
-- name: Set MySQL root Password
+- name: Set MySQL root password
   ansible.mysql.mysql_user:
-    login_host: 'localhost'
-    login_user: 'root'
+    login_host: localhost
+    login_user: root
     login_password: ''
-    name: 'root'
-    password: '{{ root_pass }}'
-    state: present
     login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: root
+    password: "{{ root_pass }}"
+    state: present
 
-- name: Create my.cnf file
+- name: Create /root/.my.cnf for subsequent tasks
   template:
     src: my.cnf
     dest: /root/.my.cnf
@@ -34,25 +39,40 @@
     group: root
     mode: '0600'
 
-- name: Create a new database with name "{{ domain_name }}"
-  ansible.mysql.mysql_db:
-    name: '`{{ domain_name }}`'
-    state: present
+- name: Generate backup user password
+  set_fact:
+    backup_pass: "{{ lookup('password', '/dev/null length=20 chars=ascii_letters,digits') }}"
+  no_log: true
 
-- name: Create user with password, all database privileges, and 'WITH GRANT OPTION' in the "{{ domain_name }}" database
+- name: Create backup user with read-only dump privileges on all databases
   ansible.mysql.mysql_user:
-    name: "{{ domain_name }}"
-    password: "{{ db_pass }}"
+    name: "backup"
+    password: "{{ backup_pass }}"
+    priv: "*.*:SELECT,LOCK TABLES,SHOW VIEW,EVENT,TRIGGER,RELOAD,PROCESS"
     state: present
-    priv: "{{ domain_name }}.*:ALL,GRANT"
+  no_log: true
 
-- name: Create db.php file
-  template:
-    src: db.php
-    dest: /var/www/vhosts/{{ domain_name }}/index.php
-    owner: www-data
-    group: www-data
-    mode: '0644'
+- name: Create databases
+  ansible.mysql.mysql_db:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ _mysql_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Create database users
+  ansible.mysql.mysql_user:
+    name: "{{ item.user }}"
+    # Use provided password or generate a random one if empty/omitted
+    password: >-
+      {{ item.password if (item.password is defined and item.password | length > 0)
+         else lookup('password', '/dev/null length=20 chars=ascii_letters,digits') }}
+    priv: "{{ item.name }}.*:ALL,GRANT"
+    state: present
+  loop: "{{ _mysql_databases }}"
+  loop_control:
+    label: "{{ item.user }}@{{ item.name }}"
+  no_log: true
 
 - name: Create a directory for backup script
   file:
