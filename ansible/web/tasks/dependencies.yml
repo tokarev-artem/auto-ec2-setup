@@ -8,7 +8,7 @@
     - software-properties-common
     - net-tools
     - zip
-    state: latest
+    state: present
     update_cache: true
     
 - name: Install certbot

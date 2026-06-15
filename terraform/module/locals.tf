@@ -13,16 +13,14 @@ locals {
     var.architecture == "arm64" ? "t4g.medium" : "t3.medium"
   )
 
-  init_script = templatefile("${path.module}/cloud_init.sh.tpl", merge(
-    {
-      domain_name         = var.domain_name
-      php_version         = var.php_version
-      web_framework       = var.web_framework
-      wordpress_hardening = var.wordpress_hardening
-    },
-    var.web_framework == "nodejs" ? {
-      upstream_port  = var.upstream_port
-      nodejs_version = var.nodejs_version
-    } : {}
-  ))
+  init_script = templatefile("${path.module}/cloud_init.sh.tpl", {
+    domain_name         = var.domain_name
+    php_version         = var.php_version
+    web_framework       = var.web_framework
+    wordpress_hardening = var.wordpress_hardening
+    # Always provided so templatefile() can parse the %{ if } block regardless of framework;
+    # the conditional in the template controls whether they are emitted in the output.
+    upstream_port  = var.upstream_port
+    nodejs_version = var.nodejs_version
+  })
 }

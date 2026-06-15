@@ -1,0 +1,10 @@
+---
+- name: Restart php-fpm
+  service:
+    name: "{{ 'php-fpm' if php_version is version('8.5', '>=') else 'php' ~ php_version ~ '-fpm' }}"
+    state: restarted
+
+- name: Restart nginx
+  service:
+    name: nginx
+    state: restarted

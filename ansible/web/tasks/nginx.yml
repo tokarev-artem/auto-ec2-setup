@@ -1,7 +1,7 @@
 ---
 - name: NGINX | Installing NGINX
   apt: 
-    state: latest 
+    state: present 
     name: nginx
 
 - name: Create directory
@@ -17,9 +17,4 @@
   template: 
     src: nginx.conf 
     dest: /etc/nginx/conf.d/{{ domain_name }}.conf
-
-- name: NGINX | Starting NGINX
-  service:
-    name: nginx
-    state: restarted
-    enabled: yes
+  notify: restart nginx
