@@ -28,14 +28,14 @@
 - name: Assert supported architecture
   assert:
     that:
-      - ansible_architecture in ['x86_64', 'aarch64']
+      - ansible_facts['architecture'] in ['x86_64', 'aarch64']
     fail_msg: >-
-      Unsupported architecture '{{ ansible_architecture }}'.
+      Unsupported architecture '{{ ansible_facts['architecture'] }}'.
       Supported values are: 'x86_64' and 'aarch64'.
 
 - name: Set AWS CLI architecture string
   set_fact:
-    aws_cli_arch: "{{ 'x86_64' if ansible_architecture == 'x86_64' else 'aarch64' }}"
+    aws_cli_arch: "{{ 'x86_64' if ansible_facts['architecture'] == 'x86_64' else 'aarch64' }}"
 
 - name: Download AWS CLI v2
   get_url:

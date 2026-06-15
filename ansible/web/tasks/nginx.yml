@@ -17,4 +17,4 @@
   template: 
     src: nginx.conf 
     dest: /etc/nginx/conf.d/{{ domain_name }}.conf
-  notify: restart nginx
+  notify: Restart nginx

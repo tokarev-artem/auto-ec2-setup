@@ -1,18 +1,18 @@
 - name: Gather facts
   setup:
     gather_subset: min
-  when: ansible_distribution_version is not defined
+  when: ansible_facts['distribution_version'] is not defined
 
 - name: Set PHP package prefix
   set_fact:
-    php_pkg_prefix: "{{ '' if ansible_distribution_version == '26.04' else 'php' + php_version + '-' }}"
-    php_base_pkg:   "{{ 'php' if ansible_distribution_version == '26.04' else 'php' + php_version }}"
+    php_pkg_prefix: "{{ '' if ansible_facts['distribution_version'] == '26.04' else 'php' + php_version + '-' }}"
+    php_base_pkg:   "{{ 'php' if ansible_facts['distribution_version'] == '26.04' else 'php' + php_version }}"
 
 - name: Add ondrej/php PPA repository
   apt_repository:
     repo: 'ppa:ondrej/php'
     state: present
-  when: ansible_distribution_version != "26.04"
+  when: ansible_facts['distribution_version'] != "26.04"
 
 - name: PHP | Install modules
   apt:
