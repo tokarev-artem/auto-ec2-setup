@@ -24,4 +24,5 @@ EXTRA_VARS="$$EXTRA_VARS upstream_port=${upstream_port} nodejs_version=${nodejs_
 %{ endif }
 
 echo "Running ansible-playbook"
+echo "EXTRA_VARS: $$EXTRA_VARS"
 ansible-playbook setup.yml --extra-vars "$$EXTRA_VARS" --extra-vars @/tmp/mysql_vars.json
