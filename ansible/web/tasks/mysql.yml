@@ -1,9 +1,4 @@
 ---
-# mysql_databases is passed as a JSON string from --extra-vars; parse it once into a fact.
-- name: Parse mysql_databases JSON
-  set_fact:
-    _mysql_databases: "{{ mysql_databases | from_json if mysql_databases is string else mysql_databases }}"
-
 - name: Installing MySQL and dependencies
   package:
     name: "{{ item }}"
@@ -46,8 +41,9 @@
 
 - name: Create backup user with read-only dump privileges on all databases
   ansible.mysql.mysql_user:
-    name: "backup"
+    name: backup
     password: "{{ backup_pass }}"
+    # Minimal privilege set required by mysqldump — no write access
     priv: "*.*:SELECT,LOCK TABLES,SHOW VIEW,EVENT,TRIGGER,RELOAD,PROCESS"
     state: present
   no_log: true
@@ -56,20 +52,19 @@
   ansible.mysql.mysql_db:
     name: "{{ item.name }}"
     state: present
-  loop: "{{ _mysql_databases }}"
+  loop: "{{ mysql_databases }}"
   loop_control:
     label: "{{ item.name }}"
 
 - name: Create database users
   ansible.mysql.mysql_user:
     name: "{{ item.user }}"
-    # Use provided password or generate a random one if empty/omitted
     password: >-
       {{ item.password if (item.password is defined and item.password | length > 0)
          else lookup('password', '/dev/null length=20 chars=ascii_letters,digits') }}
     priv: "{{ item.name }}.*:ALL,GRANT"
     state: present
-  loop: "{{ _mysql_databases }}"
+  loop: "{{ mysql_databases }}"
   loop_control:
     label: "{{ item.user }}@{{ item.name }}"
   no_log: true
