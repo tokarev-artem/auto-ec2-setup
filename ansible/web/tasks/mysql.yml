@@ -6,8 +6,8 @@
     update_cache: yes
   loop:
     - mysql-server
-    - mysql-client 
-    - python3-mysqldb
+    - mysql-client
+    - python3-pymysql
     - libmysqlclient-dev
 
 - name: Start and enable MySQL service
@@ -17,36 +17,37 @@
     enabled: yes
 
 - name: Set MySQL root Password
-  mysql_user:
+  community.mysql.mysql_user:
     login_host: 'localhost'
     login_user: 'root'
     login_password: ''
     name: 'root'
     password: '{{ root_pass }}'
     state: present
+    login_unix_socket: /var/run/mysqld/mysqld.sock
 
 - name: Create my.cnf file
-  template: 
-    src: my.cnf 
+  template:
+    src: my.cnf
     dest: /root/.my.cnf
     owner: root
     group: root
     mode: '0600'
 
 - name: Create a new database with name "{{ domain_name }}"
-  mysql_db:
+  community.mysql.mysql_db:
     name: '`{{ domain_name }}`'
     state: present
 
 - name: Create user with password, all database privileges, and 'WITH GRANT OPTION' in the "{{ domain_name }}" database
-  mysql_user:
+  community.mysql.mysql_user:
     name: "{{ domain_name }}"
     password: "{{ db_pass }}"
     state: present
     priv: "{{ domain_name }}.*:ALL,GRANT"
 
 - name: Create db.php file
-  template: 
+  template:
     src: db.php
     dest: /var/www/vhosts/{{ domain_name }}/index.php
     owner: www-data
@@ -61,7 +62,7 @@
     state: directory
 
 - name: Create mysql backup job
-  template: 
+  template:
     src: mysql-maint.sh
     dest: /root/bin/mysql-maint.sh
     owner: root

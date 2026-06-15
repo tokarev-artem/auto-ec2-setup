@@ -13,7 +13,7 @@
     name: ondrej-php
     types: deb
     uris: https://ppa.launchpadcontent.net/ondrej/php/ubuntu
-    suites: "{{ ansible_distribution_release }}"
+    suites: "{{ ansible_facts['distribution_release'] }}"
     components: main
     signed_by: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x4F4EA0AAE5267A6C
     state: present
