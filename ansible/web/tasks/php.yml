@@ -9,8 +9,13 @@
     php_base_pkg:   "{{ 'php' if ansible_facts['distribution_version'] == '26.04' else 'php' + php_version }}"
 
 - name: Add ondrej/php PPA repository
-  apt_repository:
-    repo: 'ppa:ondrej/php'
+  deb822_repository:
+    name: ondrej-php
+    types: deb
+    uris: https://ppa.launchpadcontent.net/ondrej/php/ubuntu
+    suites: "{{ ansible_distribution_release }}"
+    components: main
+    signed_by: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x4F4EA0AAE5267A6C
     state: present
   when: ansible_facts['distribution_version'] != "26.04"
 
