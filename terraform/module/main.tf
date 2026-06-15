@@ -28,8 +28,8 @@ module "ec2_instance" {
   version = "~> 5.8"
 
   name                        = var.domain_name
-  ami                         = data.aws_ami.ubuntu.image_id
-  instance_type               = var.instance_type
+  ami                         = local.ami_id
+  instance_type               = local.effective_instance_type
   key_name                    = aws_key_pair.this.key_name
   associate_public_ip_address = true
   vpc_security_group_ids      = [module.security_group.security_group_id]

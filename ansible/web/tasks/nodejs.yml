@@ -1,0 +1,40 @@
+- name: Node.js | Download nvm install script
+  get_url:
+    url: "https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/install.sh"
+    dest: "/tmp/nvm-install.sh"
+    mode: "0755"
+
+- name: Node.js | Run nvm install script for root user
+  shell: bash /tmp/nvm-install.sh
+  environment:
+    HOME: /root
+  args:
+    creates: /root/.nvm/nvm.sh
+
+- name: Node.js | Install and use specified Node.js version
+  shell: |
+    export NVM_DIR="/root/.nvm"
+    source "$NVM_DIR/nvm.sh"
+    nvm install {{ nodejs_version }}
+    nvm use {{ nodejs_version }}
+  args:
+    executable: /bin/bash
+  environment:
+    HOME: /root
+
+- name: Node.js | Verify node installation
+  shell: |
+    export NVM_DIR="/root/.nvm"
+    source "$NVM_DIR/nvm.sh"
+    node --version
+  args:
+    executable: /bin/bash
+  environment:
+    HOME: /root
+  register: node_version_check
+  failed_when: node_version_check.rc != 0
+
+- name: Node.js | Fail with descriptive message if node is not available
+  fail:
+    msg: "Node.js verification failed after nvm install. 'node --version' exited with rc={{ node_version_check.rc }}. Output: {{ node_version_check.stderr }}"
+  when: node_version_check.rc != 0

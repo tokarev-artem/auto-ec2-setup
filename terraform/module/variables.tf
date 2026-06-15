@@ -31,3 +31,40 @@ variable "root_block_device" {
   type        = any
   description = "Root block device parameters"
 }
+variable "architecture" {
+  type        = string
+  description = "CPU architecture for the EC2 instance; valid values are x86_64 and arm64"
+  default     = "x86_64"
+  validation {
+    condition     = contains(["x86_64", "arm64"], var.architecture)
+    error_message = "architecture must be one of: \"x86_64\", \"arm64\"."
+  }
+}
+variable "web_framework" {
+  type        = string
+  description = "Web framework to configure nginx for; valid values are php, nodejs, and static"
+  default     = "php"
+  validation {
+    condition     = contains(["php", "nodejs", "static"], var.web_framework)
+    error_message = "web_framework must be one of: \"php\", \"nodejs\", \"static\"."
+  }
+}
+variable "upstream_port" {
+  type        = number
+  description = "Local TCP port that the Node.js process listens on (used when web_framework = \"nodejs\")"
+  default     = 3000
+  validation {
+    condition     = var.upstream_port >= 1 && var.upstream_port <= 65535
+    error_message = "upstream_port must be between 1 and 65535 (inclusive)."
+  }
+}
+variable "nodejs_version" {
+  type        = string
+  description = "Node.js version to install via nvm when web_framework = \"nodejs\" (e.g. \"20\" for Node.js 20 LTS)"
+  default     = "20"
+}
+variable "wordpress_hardening" {
+  type        = bool
+  description = "Whether to enable WordPress-specific nginx security rules (xmlrpc.php deny, readme/license 404, uploads PHP-execution deny)"
+  default     = false
+}

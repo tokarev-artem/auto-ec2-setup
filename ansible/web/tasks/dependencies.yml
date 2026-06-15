@@ -25,9 +25,21 @@
     recurse: yes
     state: directory
 
+- name: Assert supported architecture
+  assert:
+    that:
+      - ansible_architecture in ['x86_64', 'aarch64']
+    fail_msg: >-
+      Unsupported architecture '{{ ansible_architecture }}'.
+      Supported values are: 'x86_64' and 'aarch64'.
+
+- name: Set AWS CLI architecture string
+  set_fact:
+    aws_cli_arch: "{{ 'x86_64' if ansible_architecture == 'x86_64' else 'aarch64' }}"
+
 - name: Download AWS CLI v2
   get_url:
-    url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+    url: "https://awscli.amazonaws.com/awscli-exe-linux-{{ aws_cli_arch }}.zip"
     dest: "/tmp/awscliv2.zip"
 
 - name: Unzip AWS CLI v2
