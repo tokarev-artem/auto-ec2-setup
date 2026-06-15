@@ -17,7 +17,7 @@
     enabled: yes
 
 - name: Set MySQL root Password
-  community.mysql.mysql_user:
+  ansible.mysql.mysql_user:
     login_host: 'localhost'
     login_user: 'root'
     login_password: ''
@@ -35,12 +35,12 @@
     mode: '0600'
 
 - name: Create a new database with name "{{ domain_name }}"
-  community.mysql.mysql_db:
+  ansible.mysql.mysql_db:
     name: '`{{ domain_name }}`'
     state: present
 
 - name: Create user with password, all database privileges, and 'WITH GRANT OPTION' in the "{{ domain_name }}" database
-  community.mysql.mysql_user:
+  ansible.mysql.mysql_user:
     name: "{{ domain_name }}"
     password: "{{ db_pass }}"
     state: present
