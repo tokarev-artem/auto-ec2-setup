@@ -1,4 +1,6 @@
 #!/bin/bash
+set -x
+
 apt-add-repository ppa:ansible/ansible
 echo "Install tools"
 apt update
