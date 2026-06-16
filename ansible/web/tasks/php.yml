@@ -72,8 +72,8 @@
 - name: PHP | Configure php.ini
   ini_file:
     path: "/etc/php/{{ php_version }}/fpm/php.ini"
-    section: "{{ item.0.key }}"
-    option: "{{ item.1.key }}"
-    value: "{{ item.1.value }}"
-  loop: "{{ php_ini_config | dict2items | subelements('value') }}"
+    section: PHP
+    option: "{{ item.key }}"
+    value: "{{ item.value }}"
+  loop: "{{ php_ini_config.PHP | dict2items }}"
   notify: Restart php-fpm
