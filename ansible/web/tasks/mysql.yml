@@ -8,6 +8,7 @@
     - mysql-server
     - mysql-client
     - python3-pymysql
+    - python3-cryptography
     - libmysqlclient-dev
 
 - name: Start and enable MySQL service
@@ -23,7 +24,8 @@
     login_password: ''
     login_unix_socket: /var/run/mysqld/mysqld.sock
     name: root
-    password: "{{ root_pass }}"
+    plugin: caching_sha2_password
+    plugin_auth_string: "{{ root_pass }}"
     state: present
 
 - name: Create /root/.my.cnf for subsequent tasks
@@ -42,8 +44,8 @@
 - name: Create backup user with read-only dump privileges on all databases
   ansible.mysql.mysql_user:
     name: backup
-    password: "{{ backup_pass }}"
-    # Minimal privilege set required by mysqldump — no write access
+    plugin: caching_sha2_password
+    plugin_auth_string: "{{ backup_pass }}"
     priv: "*.*:SELECT,LOCK TABLES,SHOW VIEW,EVENT,TRIGGER,RELOAD,PROCESS"
     state: present
   no_log: true
@@ -70,7 +72,8 @@
 - name: Create database users
   ansible.mysql.mysql_user:
     name: "{{ item.user }}"
-    password: "{{ db_user_passwords[item.user] }}"
+    plugin: caching_sha2_password
+    plugin_auth_string: "{{ db_user_passwords[item.user] }}"
     priv: "{{ item.name }}.*:ALL,GRANT"
     state: present
   loop: "{{ mysql_databases }}"
