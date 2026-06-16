@@ -16,7 +16,6 @@ echo "STEP 3 - create tmp file"
 printf '%s\n' '${mysql_databases}' > /tmp/mysql_vars.json
 
 echo "STEP 4 - create extra vars"
-# Extra vars are now passed as JSON from Terraform - much more reliable
 cat > /tmp/extra_vars.json << 'EOF'
 ${extra_vars_json}
 EOF
@@ -24,4 +23,5 @@ EOF
 echo "STEP 5 - run ansible playbook"
 ansible-playbook setup.yml \
   --extra-vars "@/tmp/extra_vars.json" \
-  --extra-vars "@/tmp/mysql_vars.json"
+  --extra-vars "@/tmp/mysql_vars.json" \
+  -vvv
