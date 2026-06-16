@@ -23,6 +23,14 @@ locals {
     upstream_port   = var.upstream_port
     nodejs_version  = var.nodejs_version
     install_mysql   = var.install_mysql
-    mysql_databases = jsonencode({ mysql_databases = var.mysql_databases })
+    mysql_databases = jsonencode({
+      mysql_databases = [
+        for db in var.mysql_databases : {
+          name = db.name
+          user = db.user
+          # password intentionally excluded — Ansible generates it at runtime
+        }
+      ]
+    })
   })
 }
