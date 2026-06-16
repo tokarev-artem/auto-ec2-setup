@@ -114,7 +114,7 @@ locals {
   ubuntu_codenames = {
     "22.04" = "jammy"
     "24.04" = "noble"
-    "26.04" = "questing"
+    "26.04" = "resolute"
   }
 
   ubuntu_codename = local.ubuntu_codenames[var.ubuntu_lts_version]

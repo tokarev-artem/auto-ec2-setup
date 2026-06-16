@@ -3,10 +3,10 @@
     gather_subset: min
   when: ansible_facts['distribution_version'] is not defined
 
-- name: Set PHP package prefix
+- name: Define PHP packaging strategy
   set_fact:
-    php_pkg_prefix: "{{ '' if ansible_facts['distribution_version'] == '26.04' else 'php' + (php_version | default('')) + '-' }}"
-    php_base_pkg:   "{{ 'php' if ansible_facts['distribution_version'] == '26.04' else 'php' + (php_version | default('')) }}"
+    php_pkg_prefix: "php{{ php_version }}-"
+    php_base_pkg: "php"
 
 - name: Add ondrej/php PPA repository
   deb822_repository:
