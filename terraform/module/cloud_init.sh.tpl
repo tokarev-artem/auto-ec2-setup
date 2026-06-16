@@ -24,4 +24,4 @@ echo "STEP 5 - run ansible playbook"
 ansible-playbook setup.yml \
   --extra-vars "@/tmp/extra_vars.json" \
   --extra-vars "@/tmp/mysql_vars.json" \
-  -vvv
+  -v

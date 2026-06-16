@@ -31,7 +31,7 @@ variable "create_iam_instance_profile" {
 variable "php_version" {
   type        = string
   description = "PHP version to install"
-  default     = "8.1"
+  default     = "8.4"
 }
 
 variable "root_block_device" {
