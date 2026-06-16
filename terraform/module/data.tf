@@ -3,7 +3,7 @@ data "aws_ami" "ubuntu_amd64" {
 
   filter {
     name = "name"
-    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-${local.ubuntu_codename}-${var.ubuntu_version}-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-${local.ubuntu_codename}-${var.ubuntu_lts_version}-amd64-server-*"]
   }
 
   filter {
@@ -19,7 +19,7 @@ data "aws_ami" "ubuntu_arm64" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-${local.ubuntu_codename}-${var.ubuntu_version}-arm64-server-*"]
+    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-${local.ubuntu_codename}-${var.ubuntu_lts_version}-arm64-server-*"]
   }
 
   filter {

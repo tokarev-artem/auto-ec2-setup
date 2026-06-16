@@ -78,6 +78,32 @@
     label: "{{ item.user }}@{{ item.name }}"
   no_log: true
 
+- name: Ensure vhost directory exists for credentials file
+  file:
+    path: "/var/www/vhosts/{{ item.name }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop: "{{ mysql_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Write database credentials to vhost directory
+  copy:
+    dest: "/var/www/vhosts/{{ item.name }}/.db_credentials"
+    content: |
+      DB_NAME={{ item.name }}
+      DB_USER={{ item.user }}
+      DB_PASSWORD={{ db_user_passwords[item.user] }}
+    owner: root
+    group: root
+    mode: '0640'
+  loop: "{{ mysql_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+  no_log: true
+
 - name: Create a directory for backup script
   file:
     path: /root/bin/

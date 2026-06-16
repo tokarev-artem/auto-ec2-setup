@@ -99,13 +99,13 @@ variable "mysql_databases" {
   default = []
 }
 
-variable "ubuntu_version" {
+variable "ubuntu_lts_version" {
   type        = string
   description = "Ubuntu version"
   default     = "24.04"
 
   validation {
-    condition     = contains(["22.04", "24.04", "26.04"], var.ubuntu_version)
+    condition     = contains(["22.04", "24.04", "26.04"], var.ubuntu_lts_version)
     error_message = "Supported versions: 22.04, 24.04, 26.04."
   }
 }
@@ -117,5 +117,5 @@ locals {
     "26.04" = "questing"
   }
 
-  ubuntu_codename = local.ubuntu_codenames[var.ubuntu_version]
+  ubuntu_codename = local.ubuntu_codenames[var.ubuntu_lts_version]
 }
