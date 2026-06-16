@@ -50,31 +50,30 @@
     state: present
     update_cache: yes
 
+- name: Define php.ini configuration
+  set_fact:
+    php_ini_config:
+      PHP:
+        file_uploads: "On"
+        allow_url_fopen: "On"
+        allow_url_include: "Off"
+        short_open_tag: "Off"
+        expose_php: "Off"
+        display_errors: "Off"
+        display_startup_errors: "Off"
+        log_errors: "On"
+        ignore_repeated_errors: "Off"
+        error_log: "/var/log/php{{ php_version }}-fpm.log"
+        post_max_size: "100M"
+        upload_max_filesize: "100M"
+        cgi.force_redirect: "Off"
+        disable_functions: "passthru,system,curl_multi_exec,parse_ini_file,show_source,shell_exec,exec"
+
 - name: PHP | Configure php.ini
   ini_file:
-    dest: "/etc/php/{{ php_version }}/fpm/php.ini"
-    section: "PHP"
-    option: "{{ item.option }}"
-    value: "{{ item.value }}"
-  loop:
-    - { option: file_uploads,            value: "On" }
-    - { option: allow_url_fopen,         value: "On" }
-    - { option: allow_url_include,       value: "Off" }
-    - { option: short_open_tag,          value: "On" }
-    - { option: expose_php,              value: "Off" }
-    - { option: display_errors,          value: "Off" }
-    - { option: display_startup_errors,  value: "Off" }
-    - { option: log_errors,              value: "On" }
-    - { option: ignore_repeated_errors,  value: "Off" }
-    - { option: error_log,               value: "/var/log/php{{ php_version }}-fpm.log" }
-    - { option: post_max_size,           value: "100M" }
-    - { option: upload_max_filesize,     value: "100M" }
-    - { option: cgi.force_redirect,      value: "Off" }
-    - { option: disable_functions,       value: "passthru,system,curl_multi_exec,parse_ini_file,show_source,shell_exec,exec" }
+    path: "/etc/php/{{ php_version }}/fpm/php.ini"
+    section: "{{ item.0.key }}"
+    option: "{{ item.1.key }}"
+    value: "{{ item.1.value }}"
+  loop: "{{ php_ini_config | dict2items | subelements('value') }}"
   notify: Restart php-fpm
-
-- name: PHP | Enable and start PHP-FPM
-  service:
-    name: "php{{ php_version }}-fpm.service"
-    state: started
-    enabled: yes

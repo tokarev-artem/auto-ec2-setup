@@ -1,7 +1,16 @@
 ---
+- name: Define php-fpm service name
+  set_fact:
+    php_fpm_service: >-
+      {{ 'php-fpm'
+         if (ansible_distribution == 'Ubuntu'
+             and ansible_distribution_version is version('26.04', '==')
+             and php_version is version('8.5', '=='))
+         else 'php' ~ php_version ~ '-fpm' }}
+
 - name: Restart php-fpm
   service:
-    name: "{{ 'php-fpm' if php_version is version('8.5', '>=') else 'php' ~ php_version ~ '-fpm' }}"
+    name: "{{ php_fpm_service }}"
     state: restarted
 
 - name: Restart nginx
