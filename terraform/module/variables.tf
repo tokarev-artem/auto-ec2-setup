@@ -75,12 +75,6 @@ variable "nodejs_version" {
   default     = "20"
 }
 
-variable "wordpress_hardening" {
-  type        = bool
-  description = "Whether to enable WordPress-specific nginx security rules (xmlrpc.php deny, readme/license 404, uploads PHP-execution deny)"
-  default     = false
-}
-
 variable "install_mysql" {
   type        = bool
   description = "Whether to install MySQL and create databases/users"
@@ -91,7 +85,6 @@ variable "mysql_databases" {
   type = list(object({
     name     = string
     user     = string
-    password = optional(string, "")
   }))
   description = <<-EOT
     List of MySQL databases and users to create. Each entry creates one database
@@ -100,7 +93,7 @@ variable "mysql_databases" {
     Example:
       mysql_databases = [
         { name = "appdb",   user = "appuser" },
-        { name = "testdb",  user = "testuser", password = "s3cr3t" }
+        { name = "testdb",  user = "testuser" }
       ]
   EOT
   default = []

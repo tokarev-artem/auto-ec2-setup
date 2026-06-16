@@ -13,24 +13,34 @@ locals {
     var.architecture == "arm64" ? "t4g.medium" : "t3.medium"
   )
 
-  init_script = templatefile("${path.module}/cloud_init.sh.tpl", {
+init_script = templatefile("${path.module}/cloud_init.sh.tpl", {
+  domain_name         = var.domain_name
+  php_version         = var.php_version
+  web_framework       = var.web_framework
+  install_mysql       = var.install_mysql
+
+  upstream_port       = var.upstream_port
+  nodejs_version      = var.nodejs_version
+
+  mysql_databases = jsonencode({
+    mysql_databases = [
+      for db in var.mysql_databases : {
+        name = db.name
+        user = db.user
+      }
+    ]
+  })
+
+  # New: build all extra vars as JSON here
+  extra_vars_json = jsonencode({
     domain_name         = var.domain_name
     php_version         = var.php_version
     web_framework       = var.web_framework
-    wordpress_hardening = var.wordpress_hardening
-    # Always provided so templatefile() can parse the %{ if } block regardless of framework;
-    # the conditional in the template controls whether they are emitted in the output.
-    upstream_port   = var.upstream_port
-    nodejs_version  = var.nodejs_version
-    install_mysql   = var.install_mysql
-    mysql_databases = jsonencode({
-      mysql_databases = [
-        for db in var.mysql_databases : {
-          name = db.name
-          user = db.user
-          # password intentionally excluded — Ansible generates it at runtime
-        }
-      ]
-    })
+    install_mysql       = var.install_mysql
+
+    # Only include Node.js vars when relevant
+    upstream_port = var.web_framework == "nodejs" ? var.upstream_port : null
+    nodejs_version = var.web_framework == "nodejs" ? var.nodejs_version : null
   })
+})
 }
