@@ -47,7 +47,7 @@
 
 - name: Deploy nodejs demo app
   copy:
-    src: files/hello.js
+    src: files/app.js
     dest: "/home/nodeapp/app/server.js"
     mode: "0644"
     owner: "nodeapp"
@@ -84,7 +84,7 @@
     state: started
 
 - name: Verify service is running
-  shell: systemctl status node-hello --no-pager
+  shell: systemctl status nodejs --no-pager
   register: service_status
   failed_when: service_status.rc != 0
 

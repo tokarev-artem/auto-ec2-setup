@@ -19,6 +19,12 @@ module "security_group" {
       cidr_ipv4   = "0.0.0.0/0"
       description = "HTTPS from anywhere"
     }
+    ssh = {
+      from_port   = 22
+      ip_protocol = "tcp"
+      cidr_ipv4   = var.allow_ingress_ip
+      description = "SSH from allowed IP"
+    }
   }
   egress_rules = {
     all = {

@@ -83,8 +83,8 @@ variable "install_mysql" {
 
 variable "mysql_databases" {
   type = list(object({
-    name     = string
-    user     = string
+    name = string
+    user = string
   }))
   description = <<-EOT
     List of MySQL databases and users to create. Each entry creates one database
@@ -96,7 +96,7 @@ variable "mysql_databases" {
         { name = "testdb",  user = "testuser" }
       ]
   EOT
-  default = []
+  default     = []
 }
 
 variable "ubuntu_lts_version" {
