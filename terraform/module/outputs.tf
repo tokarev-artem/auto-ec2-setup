@@ -1,5 +1,5 @@
 output "security_group_id" {
-  value       = module.security_group.security_group_id
+  value       = module.security_group.id
   description = "EC2 instance security group ID"
 }
 output "ec2_instance_ip" {

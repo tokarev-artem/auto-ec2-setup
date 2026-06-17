@@ -1,0 +1,93 @@
+- name: Install dependencies
+  apt:
+    name:
+      - curl
+      - build-essential
+    state: present
+    update_cache: yes
+
+- name: Create application user
+  user:
+    name: "nodeapp"
+    shell: /bin/bash
+    create_home: yes
+    state: present
+
+- name: Download NVM install script
+  get_url:
+    url: "https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/install.sh"
+    dest: "/tmp/nvm-install.sh"
+    mode: "0755"
+
+- name: Install NVM for app user
+  become_user: "nodeapp"
+  shell: |
+    export HOME=/home/nodeapp
+    bash /tmp/nvm-install.sh
+  args:
+    creates: "/home/nodeapp/.nvm/nvm.sh"
+
+- name: Install Node.js via NVM
+  become_user: "nodeapp"
+  shell: |
+    export NVM_DIR="/home/nodeapp/.nvm"
+    source "$NVM_DIR/nvm.sh"
+    nvm install {{ nodejs_version }}
+    nvm alias default {{ nodejs_version }}
+  args:
+    executable: /bin/bash
+
+- name: Create app directory
+  file:
+    path: "/home/nodeapp/app"
+    state: directory
+    owner: "nodeapp"
+    group: "nodeapp"
+    mode: "0755"
+
+- name: Deploy nodejs demo app
+  copy:
+    src: files/app.js
+    dest: "/home/nodeapp/app/server.js"
+    mode: "0644"
+    owner: "nodeapp"
+    group: "nodeapp"
+
+- name: Create systemd service for Node app
+  copy:
+    dest: /etc/systemd/system/nodejs.service
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Node Hello World App
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=nodeapp
+      WorkingDirectory=/home/nodeapp/app
+      ExecStart=/bin/bash -c 'source /home/nodeapp/.nvm/nvm.sh && node server.js'
+      Restart=always
+      RestartSec=5
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: true
+
+- name: Enable and start Node app
+  systemd:
+    name: nodejs
+    enabled: true
+    state: started
+
+- name: Verify service is running
+  shell: systemctl status nodejs --no-pager
+  register: service_status
+  failed_when: service_status.rc != 0
+
+- name: Show service status
+  debug:
+    var: service_status.stdout

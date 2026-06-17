@@ -1,0 +1,21 @@
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name {{ domain_name }} www.{{ domain_name }};
+
+    root /var/www/vhosts/{{ domain_name }};
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location ~* \.(css|js)$ {
+        expires 30d;
+    }
+
+    location ~* \.(jpg|jpeg|gif|png|webp|svg|ico)$ {
+        expires 365d;
+    }
+}

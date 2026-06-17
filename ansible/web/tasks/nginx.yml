@@ -1,7 +1,7 @@
 ---
 - name: NGINX | Installing NGINX
   apt: 
-    state: latest 
+    state: present 
     name: nginx
 
 - name: Create directory
@@ -15,11 +15,6 @@
 
 - name: Add VirtualHost nginx conf
   template: 
-    src: nginx.conf 
+    src: nginx-{{ web_framework }}.conf.j2
     dest: /etc/nginx/conf.d/{{ domain_name }}.conf
-
-- name: NGINX | Starting NGINX
-  service:
-    name: nginx
-    state: restarted
-    enabled: yes
+  notify: Restart nginx

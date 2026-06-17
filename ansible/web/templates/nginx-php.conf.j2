@@ -1,0 +1,88 @@
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name {{ domain_name }} www.{{ domain_name }};
+
+    root /var/www/vhosts/{{ domain_name }};
+    index index.php;
+
+    access_log /var/log/nginx/{{ domain_name }}-access.log;
+    error_log  /var/log/nginx/{{ domain_name }}-error.log error;
+
+    server_tokens off;
+    client_max_body_size 100m;
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Allow Certbot challenges
+    location ^~ /.well-known/acme-challenge/ {
+        allow all;
+    }
+
+    # Block hidden files (.git, .env, etc.)
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+
+    # Block common sensitive files
+    location ~* \.(env|ini|conf|config)$ {
+        deny all;
+    }
+
+    # Main application routing
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    # PHP handling
+    location ~ \.php$ {
+        try_files $uri =404;
+
+        include fastcgi_params;
+        fastcgi_pass unix:/run/php/php{{ php_version }}-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+
+        fastcgi_read_timeout 1200;
+        fastcgi_hide_header SERVER;
+        fastcgi_hide_header Link;
+    }
+
+    # WordPress hardening
+    location = /xmlrpc.php {
+        deny all;
+    }
+
+    location ~ ^/(readme|license)(\.(txt|html))?$ {
+        return 404;
+    }
+
+    # Prevent execution of uploaded PHP files
+    location ~* /(uploads|files|storage)/.*\.php$ {
+        deny all;
+    }
+
+    # Static assets
+    location ~* \.(css|js)$ {
+        expires 30d;
+        access_log off;
+        log_not_found off;
+    }
+
+    location ~* \.(jpg|jpeg|gif|png|webp|svg|ico|bmp|woff|woff2|ttf|eot)$ {
+        expires 365d;
+        access_log off;
+        log_not_found off;
+    }
+
+    # Protect backups and temporary files
+    location ~* \.(log|dump|sql|bac|bkp|backup|tgz|gz|rar|bz2|tar|old|orig|original|php#|php~|php_bak|save|swo|swp)$ {
+        deny all;
+    }
+}

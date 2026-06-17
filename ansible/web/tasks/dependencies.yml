@@ -8,7 +8,7 @@
     - software-properties-common
     - net-tools
     - zip
-    state: latest
+    state: present
     update_cache: true
     
 - name: Install certbot
@@ -25,9 +25,21 @@
     recurse: yes
     state: directory
 
+- name: Assert supported architecture
+  assert:
+    that:
+      - ansible_facts['architecture'] in ['x86_64', 'aarch64']
+    fail_msg: >-
+      Unsupported architecture '{{ ansible_facts['architecture'] }}'.
+      Supported values are: 'x86_64' and 'aarch64'.
+
+- name: Set AWS CLI architecture string
+  set_fact:
+    aws_cli_arch: "{{ 'x86_64' if ansible_facts['architecture'] == 'x86_64' else 'aarch64' }}"
+
 - name: Download AWS CLI v2
   get_url:
-    url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+    url: "https://awscli.amazonaws.com/awscli-exe-linux-{{ aws_cli_arch }}.zip"
     dest: "/tmp/awscliv2.zip"
 
 - name: Unzip AWS CLI v2
@@ -37,7 +49,7 @@
     remote_src: yes
 
 - name: Install AWS CLI v2
-  command: "/tmp/aws/install"
+  command: "/tmp/aws/install --update"
 
 - name: Verify AWS CLI installation
   command: "aws --version"

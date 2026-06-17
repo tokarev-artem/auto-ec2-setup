@@ -1,38 +1,51 @@
 module "security_group" {
   source  = "terraform-aws-modules/security-group/aws"
-  version = "~> 5.0"
+  version = "~> 6.0"
 
   name        = var.domain_name
   description = var.domain_name
   vpc_id      = var.vpc_id
 
-  ingress_cidr_blocks = ["0.0.0.0/0"]
-  ingress_rules       = ["http-80-tcp", "https-443-tcp"]
-  ingress_with_cidr_blocks = [
-    {
-      from_port   = 22
-      to_port     = 22
-      protocol    = "tcp"
-      description = "Allow ingress SSH"
-      cidr_blocks = var.allow_ingress_ip
+  ingress_rules = {
+    http = {
+      from_port   = 80
+      ip_protocol = "tcp"
+      cidr_ipv4   = "0.0.0.0/0"
+      description = "HTTP from anywhere"
     }
-
-  ]
-  egress_rules = ["all-all"]
+    https = {
+      from_port   = 443
+      ip_protocol = "tcp"
+      cidr_ipv4   = "0.0.0.0/0"
+      description = "HTTPS from anywhere"
+    }
+    ssh = {
+      from_port   = 22
+      ip_protocol = "tcp"
+      cidr_ipv4   = var.allow_ingress_ip
+      description = "SSH from allowed IP"
+    }
+  }
+  egress_rules = {
+    all = {
+      ip_protocol = "-1"
+      cidr_ipv4   = "0.0.0.0/0"
+    }
+  }
 
   tags = local.tags
 }
 
 module "ec2_instance" {
   source  = "terraform-aws-modules/ec2-instance/aws"
-  version = "~> 5.8"
+  version = "~> 6.0"
 
   name                        = var.domain_name
-  ami                         = data.aws_ami.ubuntu.image_id
-  instance_type               = var.instance_type
+  ami                         = local.ami_id
+  instance_type               = local.effective_instance_type
   key_name                    = aws_key_pair.this.key_name
   associate_public_ip_address = true
-  vpc_security_group_ids      = [module.security_group.security_group_id]
+  vpc_security_group_ids      = [module.security_group.id]
   subnet_id                   = var.subnet_id
   user_data                   = local.init_script
   create_iam_instance_profile = var.create_iam_instance_profile

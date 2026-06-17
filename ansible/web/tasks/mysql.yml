@@ -6,8 +6,9 @@
     update_cache: yes
   loop:
     - mysql-server
-    - mysql-client 
-    - python3-mysqldb
+    - mysql-client
+    - python3-pymysql
+    - python3-cryptography
     - libmysqlclient-dev
 
 - name: Start and enable MySQL service
@@ -16,42 +17,95 @@
     state: started
     enabled: yes
 
-- name: Set MySQL root Password
-  mysql_user:
-    login_host: 'localhost'
-    login_user: 'root'
+- name: Set MySQL root password
+  ansible.mysql.mysql_user:
+    login_host: localhost
+    login_user: root
     login_password: ''
-    name: 'root'
-    password: '{{ root_pass }}'
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: root
+    plugin: caching_sha2_password
+    plugin_auth_string: "{{ root_pass }}"
     state: present
 
-- name: Create my.cnf file
-  template: 
-    src: my.cnf 
+- name: Create /root/.my.cnf for subsequent tasks
+  template:
+    src: my.cnf
     dest: /root/.my.cnf
     owner: root
     group: root
     mode: '0600'
 
-- name: Create a new database with name "{{ domain_name }}"
-  mysql_db:
-    name: '`{{ domain_name }}`'
-    state: present
+- name: Generate backup user password
+  set_fact:
+    backup_pass: "{{ lookup('password', '/dev/null length=20 chars=ascii_letters,digits') }}"
+  no_log: true
 
-- name: Create user with password, all database privileges, and 'WITH GRANT OPTION' in the "{{ domain_name }}" database
-  mysql_user:
-    name: "{{ domain_name }}"
-    password: "{{ db_pass }}"
+- name: Create backup user with read-only dump privileges on all databases
+  ansible.mysql.mysql_user:
+    name: backup
+    plugin: caching_sha2_password
+    plugin_auth_string: "{{ backup_pass }}"
+    priv: "*.*:SELECT,LOCK TABLES,SHOW VIEW,EVENT,TRIGGER,RELOAD,PROCESS"
     state: present
-    priv: "{{ domain_name }}.*:ALL,GRANT"
+  no_log: true
 
-- name: Create db.php file
-  template: 
-    src: db.php
-    dest: /var/www/vhosts/{{ domain_name }}/index.php
-    owner: www-data
-    group: www-data
-    mode: '0644'
+- name: Create databases
+  ansible.mysql.mysql_db:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ mysql_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Generate database user passwords
+  set_fact:
+    db_user_passwords: >-
+      {{ db_user_passwords | default({}) | combine({
+           item.user: lookup('password', '/dev/null length=20 chars=ascii_letters,digits')
+         }) }}
+  loop: "{{ mysql_databases }}"
+  loop_control:
+    label: "{{ item.user }}"
+  no_log: true
+
+- name: Create database users
+  ansible.mysql.mysql_user:
+    name: "{{ item.user }}"
+    plugin: caching_sha2_password
+    plugin_auth_string: "{{ db_user_passwords[item.user] }}"
+    priv: "{{ item.name }}.*:ALL,GRANT"
+    state: present
+  loop: "{{ mysql_databases }}"
+  loop_control:
+    label: "{{ item.user }}@{{ item.name }}"
+  no_log: true
+
+- name: Ensure vhost directory exists for credentials file
+  file:
+    path: "/var/www/vhosts/{{ item.name }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop: "{{ mysql_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Write database credentials to vhost directory
+  copy:
+    dest: "/var/www/vhosts/{{ item.name }}/.db_credentials"
+    content: |
+      DB_NAME={{ item.name }}
+      DB_USER={{ item.user }}
+      DB_PASSWORD={{ db_user_passwords[item.user] }}
+    owner: root
+    group: root
+    mode: '0640'
+  loop: "{{ mysql_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+  no_log: true
 
 - name: Create a directory for backup script
   file:
@@ -61,7 +115,7 @@
     state: directory
 
 - name: Create mysql backup job
-  template: 
+  template:
     src: mysql-maint.sh
     dest: /root/bin/mysql-maint.sh
     owner: root

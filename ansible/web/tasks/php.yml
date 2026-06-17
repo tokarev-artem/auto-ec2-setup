@@ -1,53 +1,79 @@
+- name: Gather facts
+  setup:
+    gather_subset: min
+  when: ansible_facts['distribution_version'] is not defined
+
+- name: Define PHP packaging strategy
+  set_fact:
+    php_pkg_prefix: "php{{ php_version }}-"
+    php_base_pkg: "php"
+
 - name: Add ondrej/php PPA repository
-  apt_repository:
-    repo: 'ppa:ondrej/php'
+  deb822_repository:
+    name: ondrej-php
+    types: deb
+    uris: https://ppa.launchpadcontent.net/ondrej/php/ubuntu
+    suites: "{{ ansible_facts['distribution_release'] }}"
+    components: main
+    signed_by: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x4F4EA0AAE5267A6C
     state: present
+  when: ansible_facts['distribution_version'] != "26.04"
 
-- name: PHP | Installing modules
+- name: Build PHP package list
+  set_fact:
+    php_packages:
+      - "{{ php_base_pkg }}"
+      - "{{ php_pkg_prefix }}cli"
+      - "{{ php_pkg_prefix }}fpm"
+      - "{{ php_pkg_prefix }}common"
+      - "{{ php_pkg_prefix }}gd"
+      - "{{ php_pkg_prefix }}xml"
+      - "{{ php_pkg_prefix }}odbc"
+      - "{{ php_pkg_prefix }}dba"
+      - "{{ php_pkg_prefix }}soap"
+      - "{{ php_pkg_prefix }}mysql"
+      - "{{ php_pkg_prefix }}mbstring"
+      - "{{ php_pkg_prefix }}xmlrpc"
+      - "{{ php_pkg_prefix }}bcmath"
+      - "{{ php_pkg_prefix }}curl"
+      - "{{ php_pkg_prefix }}zip"
+      - composer
+
+- name: Add opcache package
+  set_fact:
+    php_packages: "{{ php_packages + [php_pkg_prefix ~ 'opcache'] }}"
+  when: php_version != '8.5'
+
+- name: PHP | Install modules
   apt:
-    name: 
-    - php{{ php_version }}-gd
-    - php{{ php_version }}-xml
-    - php{{ php_version }}-odbc
-    - php{{ php_version }}-dba
-    - php{{ php_version }}-common
-    - php{{ php_version }}
-    - php{{ php_version }}-soap
-    - php{{ php_version }}-cli
-    - php{{ php_version }}-mysql
-    - php{{ php_version }}-mbstring
-    - php{{ php_version }}-xmlrpc
-    - php{{ php_version }}-fpm
-    - php{{ php_version }}-opcache
-    - php{{ php_version }}-bcmath
-    - php{{ php_version }}-curl
-    - php{{ php_version }}-zip
-    - composer
-    state: latest
+    name: "{{ php_packages }}"
+    state: present
+    update_cache: yes
 
-- name: php.ini changes
+- name: Define php.ini configuration
+  set_fact:
+    php_ini_config:
+      PHP:
+        file_uploads: "On"
+        allow_url_fopen: "On"
+        allow_url_include: "Off"
+        short_open_tag: "Off"
+        expose_php: "Off"
+        display_errors: "Off"
+        display_startup_errors: "Off"
+        log_errors: "On"
+        ignore_repeated_errors: "Off"
+        error_log: "/var/log/php{{ php_version }}-fpm.log"
+        post_max_size: "100M"
+        upload_max_filesize: "100M"
+        cgi.force_redirect: "Off"
+        disable_functions: "passthru,system,curl_multi_exec,parse_ini_file,show_source,shell_exec,exec"
+
+- name: PHP | Configure php.ini
   ini_file:
-     dest=/etc/php/{{ php_version }}/fpm/php.ini 
-     option={{ item.option }} section="PHP" value="{{ item.value }}"
-  with_items:
-    - {option: 'file_uploads', value: 'On'}
-    - {option: 'display_errors', value: 'Off'}
-    - {option: 'display_startup_errors', value: 'Off'}
-    - {option: 'log_errors', value: 'On'}
-    - {option: 'error_log', value: '/var/log/php{{ php_version }}-fpm.log'}
-    - {option: 'file_uploads', value: 'On'}
-    - {option: 'allow_url_fopen', value: 'On'}
-    - {option: 'allow_url_include', value: 'Off'}
-    - {option: 'disable_functions', value: 'passthru,system,curl_multi_exec,parse_ini_file,show_source,shell_exec,exec,system'}
-    - {option: 'expose_php', value: 'Off'}
-    - {option: 'ignore_repeated_errors', value: 'Off'}
-    - {option: 'cgi.force_redirect', value: 'Off'}
-    - {option: 'short_open_tag', value: 'On' }
-    - {option: 'post_max_size', value: '100M' }
-    - {option: 'upload_max_filesize', value: '100M'}
-
-- name: PHP | Staring PHP-FPM
-  service:
-    name: php{{ php_version }}-fpm.service
-    state: restarted
-    enabled: yes
+    path: "/etc/php/{{ php_version }}/fpm/php.ini"
+    section: PHP
+    option: "{{ item.key }}"
+    value: "{{ item.value }}"
+  loop: "{{ php_ini_config.PHP | dict2items }}"
+  notify: Restart php-fpm
