@@ -1,0 +1,15 @@
+<?php
+    $creds = parse_ini_file(__DIR__ . "/.db_credentials");
+
+    $servername = "localhost";
+    $username = $creds["DB_USER"];
+    $password = $creds["DB_PASSWORD"];
+
+    $conn = new mysqli($servername, $username, $password);
+
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+
+    echo "Connected successfully";
+?>

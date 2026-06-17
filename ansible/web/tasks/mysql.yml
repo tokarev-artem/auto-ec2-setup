@@ -107,6 +107,14 @@
     label: "{{ item.name }}"
   no_log: true
 
+- name: Deploy db.php file
+  template:
+    src: db.php.j2
+    dest: /var/www/vhosts/{{ domain_name }}/index.php
+    owner: www-data
+    group: www-data
+    mode: '0644'
+
 - name: Create a directory for backup script
   file:
     path: /root/bin/
